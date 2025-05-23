@@ -11,30 +11,32 @@ You will also need [Docker](https://www.docker.com/) installed.
 
 __Note:__ These scripts were written for Linux but have been tested on a Windows system using WSL 2 and Docker for Desktop.
 
-Since the targets live in Linux, you'll need to build the installer in Linux (versus on Windows and MacOS). This can be done automatically in the `sh tests_integration/test_all.sh` script by adding the `--run-installer` flag.
+Since the targets live in Linux, you'll need to build the installer in Linux (versus on Windows and MacOS). This can be done automatically by running the `sh tests_integration/build_installer.sh` command.
 
 ## How to Run
 You can run these example test suites using a locally hosted LLM or in the cloud just as you would normally with Cover Agent.
 
 ### Running the Tests
 To run the full test suite, simply run the following command from the root of the repository:
+```shell
+poetry run python tests_integration/run_test_all.py
 ```
-sh tests_integration/test_all.sh
-```
+There's a file with sample test scenarios `tests_integration/scenarios.py` where each test maybe adjusted to your needs. All the scenarios will be executed running this command.
 
 Or run each test individually:
 #### Python Fast API Example
-```
-sh tests_integration/test_with_docker.sh \
-  --dockerfile "templated_tests/python_fastapi/Dockerfile" \
+```shell
+poetry run python tests_integration/run_test_with_docker.py \
+  --dockerfile "templated_tests/python_fastapi/Dockerfile"\
   --source-file-path "app.py" \
   --test-file-path "test_app.py" \
-  --test-command "pytest --cov=. --cov-report=xml --cov-report=term"
+  --test-command "pytest --cov=. --cov-report=xml --cov-report=term" \
+  --model "gpt-4o-mini"
 ```
 
 #### Go Webservice Example
-```
-sh tests_integration/test_with_docker.sh \
+```shell
+poetry run python tests_integration/run_test_with_docker.py \
   --dockerfile "templated_tests/go_webservice/Dockerfile" \
   --source-file-path "app.go" \
   --test-file-path "app_test.go" \
@@ -43,8 +45,8 @@ sh tests_integration/test_with_docker.sh \
 ```
 
 #### Java Gradle Example
-```
-sh tests_integration/test_with_docker.sh \
+```shell
+poetry run python tests_integration/run_test_with_docker.py \
   --dockerfile "templated_tests/java_gradle/Dockerfile" \
   --source-file-path "src/main/java/com/davidparry/cover/SimpleMathOperations.java" \
   --test-file-path "src/test/groovy/com/davidparry/cover/SimpleMathOperationsSpec.groovy" \
@@ -55,8 +57,8 @@ sh tests_integration/test_with_docker.sh \
 ```
 
 #### Java Spring Calculator Example
-```
-sh tests_integration/test_with_docker.sh \
+```shell
+poetry run python tests_integration/run_test_with_docker.py \
   --dockerfile "templated_tests/java_spring_calculator/Dockerfile" \
   --source-file-path "src/main/java/com/example/calculator/controller/CalculatorController.java" \
   --test-file-path "src/test/java/com/example/calculator/controller/CalculatorControllerTest.java" \
@@ -67,8 +69,8 @@ sh tests_integration/test_with_docker.sh \
 ```
 
 #### VanillaJS Example
-```
-sh tests_integration/test_with_docker.sh \
+```shell
+poetry run python tests_integration/run_test_with_docker.py \
   --dockerfile "templated_tests/js_vanilla/Dockerfile" \
   --source-file-path "ui.js" \
   --test-file-path "ui.test.js" \
@@ -79,11 +81,39 @@ sh tests_integration/test_with_docker.sh \
 
 ### Using Different LLMs
 You can use a different LLM by passing in the `--model` and `--api-base` parameters. For example, to use a locally hosted LLM with Ollama you can pass in:
-```
+```shell
 --model "ollama/mistral" --api-base "http://host.docker.internal:11434"
 ```
-
 For any other LLM that requires more environment variables to be set, you will need to update the shell script and pass in the variables within the Docker command.
+
+### Suppressing Log Files
+You can suppress logs using the `--suppress-log-files` flag. This prevents the creation of the `run.log`, `test_results.html`, and the test results `db` files:
+* Running all tests:
+```shell
+poetry run python tests_integration/run_test_all.py --suppress-log-files
+```
+* Running a single test:
+```shell
+poetry run python tests_integration/run_test_with_docker.py \
+  --dockerfile "templated_tests/python_fastapi/Dockerfile"\
+  --source-file-path "app.py" \
+  --test-file-path "test_app.py" \
+  --test-command "pytest --cov=. --cov-report=xml --cov-report=term" \
+  --model "gpt-4o-mini" \
+  --suppress-log-files
+```
+* If you run all scenarios, this flag may be added there:
+```python
+    # Python FastAPI Example
+    {
+        "docker_image": "embeddeddevops/python_fastapi:latest",
+        "source_file_path": "app.py",
+        "test_file_path": "test_app.py",
+        "test_command": r"pytest --cov=. --cov-report=xml --cov-report=term",
+        "model": "gpt-4o-mini",
+        "suppress_log_files": True,
+    }
+```
 
 ## When to Run
 This test suite is intended to run with real LLMs (either locally hosted or online). If choosing cloud-provided LLMs, keep in mind that there is a cost associated with running these tests.
@@ -98,7 +128,7 @@ The `increase_coverage.py` script attempts to run Cover Agent for all files with
 ```
 poetry install
 poetry shell
-python tests_integration/increase_coverage.py
+poetry run python tests_integration/increase_coverage.py
 ```
 
 # Analyzing failures

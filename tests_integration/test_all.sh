@@ -6,13 +6,13 @@ set -x  # Print commands and their arguments as they are executed
 
 # Default model name
 MODEL="gpt-4o-2024-11-20"
-RUN_INSTALLER=false
+SUPPRESS_LOG_FILES=""
 
 # Function to display usage
 usage() {
-    echo "Usage: $0 [--model model_name] [--run-installer]"
+    echo "Usage: $0 [--model model_name]"
     echo "  --model model_name      Set the model name (default: gpt-4o-mini)"
-    echo "  --run-installer         Run the installer within a Docker container"
+    echo "  --suppress-log-files    Suppress generation of log files"
     exit 1
 }
 
@@ -23,8 +23,8 @@ while [[ "$#" -gt 0 ]]; do
             MODEL="$2"
             shift
             ;;
-        --run-installer)
-            RUN_INSTALLER=true
+        --suppress-log-files)
+            SUPPRESS_LOG_FILES="--suppress-log-files"
             ;;
         *)
             usage
@@ -32,14 +32,6 @@ while [[ "$#" -gt 0 ]]; do
     esac
     shift
 done
-
-# Build the installer within a Docker container if requested
-if [ "$RUN_INSTALLER" = true ]; then
-    docker build -t cover-agent-installer -f Dockerfile .
-
-    mkdir -p dist
-    docker run --rm --volume "$(pwd)/dist:/app/dist" cover-agent-installer
-fi
 
 # Set the log_db_arg variable if LOG_DB_PATH is set
 log_db_arg=""
@@ -58,7 +50,8 @@ sh tests_integration/test_with_docker.sh \
   --max-iterations "4" \
   --desired-coverage "50" \
   --model $MODEL \
-  $log_db_arg
+  $log_db_arg \
+  $SUPPRESS_LOG_FILES
 
 # C++ Calculator Example
 sh tests_integration/test_with_docker.sh \
@@ -69,7 +62,8 @@ sh tests_integration/test_with_docker.sh \
   --test-command "sh build_and_test_with_coverage.sh" \
   --coverage-type "cobertura" \
   --model $MODEL \
-  $log_db_arg
+  $log_db_arg \
+  $SUPPRESS_LOG_FILES
 
 # C# Calculator Web Service
 sh tests_integration/test_with_docker.sh \
@@ -81,7 +75,8 @@ sh tests_integration/test_with_docker.sh \
   --coverage-type "cobertura" \
   --desired-coverage "50" \
   --model $MODEL \
-  $log_db_arg
+  $log_db_arg \
+  $SUPPRESS_LOG_FILES
 
 # Go Webservice Example
 sh tests_integration/test_with_docker.sh \
@@ -91,7 +86,8 @@ sh tests_integration/test_with_docker.sh \
   --test-command "go test -coverprofile=coverage.out && gocov convert coverage.out | gocov-xml > coverage.xml" \
   --max-iterations "4" \
   --model $MODEL \
-  $log_db_arg
+  $log_db_arg \
+  $SUPPRESS_LOG_FILES
 
 # Java Gradle example
 sh tests_integration/test_with_docker.sh \
@@ -102,7 +98,8 @@ sh tests_integration/test_with_docker.sh \
   --coverage-type "jacoco" \
   --code-coverage-report-path "build/reports/jacoco/test/jacocoTestReport.csv" \
   --model $MODEL \
-  $log_db_arg
+  $log_db_arg \
+  $SUPPRESS_LOG_FILES
 
 # Java Spring Calculator example
 sh tests_integration/test_with_docker.sh \
@@ -113,7 +110,8 @@ sh tests_integration/test_with_docker.sh \
   --coverage-type "jacoco" \
   --code-coverage-report-path "target/site/jacoco/jacoco.csv" \
   --model $MODEL \
-  $log_db_arg
+  $log_db_arg \
+  $SUPPRESS_LOG_FILES
 
 # VanillaJS Example
 sh tests_integration/test_with_docker.sh \
@@ -123,7 +121,8 @@ sh tests_integration/test_with_docker.sh \
   --test-command "npm run test:coverage" \
   --code-coverage-report-path "coverage/coverage.xml" \
   --model $MODEL \
-  $log_db_arg
+  $log_db_arg \
+  $SUPPRESS_LOG_FILES
 
 # Python FastAPI Example
 sh tests_integration/test_with_docker.sh \
@@ -132,7 +131,8 @@ sh tests_integration/test_with_docker.sh \
   --test-file-path "test_app.py" \
   --test-command "pytest --cov=. --cov-report=xml --cov-report=term" \
   --model "gpt-4o-mini" \
-  $log_db_arg
+  $log_db_arg \
+  $SUPPRESS_LOG_FILES
 
 # React Calculator Example
 sh tests_integration/test_with_docker.sh \
@@ -143,7 +143,8 @@ sh tests_integration/test_with_docker.sh \
   --code-coverage-report-path "coverage/cobertura-coverage.xml" \
   --desired-coverage "55" \
   --model $MODEL \
-  $log_db_arg
+  $log_db_arg \
+  $SUPPRESS_LOG_FILES
 
 # Ruby Sinatra Example
 sh tests_integration/test_with_docker.sh \
@@ -153,7 +154,8 @@ sh tests_integration/test_with_docker.sh \
   --test-command "ruby test_app.rb" \
   --code-coverage-report-path "coverage/coverage.xml" \
   --model $MODEL \
-  $log_db_arg
+  $log_db_arg \
+  $SUPPRESS_LOG_FILES
 
 # TypeScript Calculator Example
 sh tests_integration/test_with_docker.sh \
@@ -163,4 +165,5 @@ sh tests_integration/test_with_docker.sh \
   --test-command "npm run test" \
   --code-coverage-report-path "coverage/cobertura-coverage.xml" \
   --model $MODEL \
-  $log_db_arg
+  $log_db_arg \
+  $SUPPRESS_LOG_FILES
