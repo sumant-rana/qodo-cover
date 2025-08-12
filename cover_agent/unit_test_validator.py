@@ -15,7 +15,7 @@ from cover_agent.file_preprocessor import FilePreprocessor
 from cover_agent.runner import Runner
 from cover_agent.settings.config_loader import get_settings
 from cover_agent.settings.config_schema import CoverageType
-from cover_agent.utils import load_yaml
+from cover_agent.utils import load_yaml, get_included_files
 
 
 class UnitTestValidator:
@@ -77,7 +77,7 @@ class UnitTestValidator:
         self.code_coverage_report_path = code_coverage_report_path
         self.test_command = test_command
         self.test_command_dir = test_command_dir
-        self.included_files = self.get_included_files(included_files)
+        self.included_files = get_included_files(included_files, project_root, True)
         self.coverage_type = coverage_type
         self.desired_coverage = desired_coverage
         self.additional_instructions = additional_instructions
@@ -317,34 +317,6 @@ class UnitTestValidator:
             with open(self.code_coverage_report_path, "r") as f:
                 self.code_coverage_report = f.read()
 
-    @staticmethod
-    def get_included_files(included_files):
-        """
-        A method to read and concatenate the contents of included files into a single string.
-
-        Parameters:
-            included_files (list): A list of paths to included files.
-
-        Returns:
-            str: A string containing the concatenated contents of the included files, or an empty string if the input list is empty.
-        """
-        if included_files:
-            included_files_content = []
-            file_names = []
-            for file_path in included_files:
-                try:
-                    with open(file_path, "r") as file:
-                        included_files_content.append(file.read())
-                        file_names.append(file_path)
-                except IOError as e:
-                    print(f"Error reading file {file_path}: {str(e)}")
-            out_str = ""
-            if included_files_content:
-                for i, content in enumerate(included_files_content):
-                    out_str += f"file_path: `{file_names[i]}`\ncontent:\n```\n{content}\n```\n"
-
-            return out_str.strip()
-        return ""
 
     def validate_test(self, generated_test: dict):
         """
